@@ -3,154 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Troop Gear Inventory</title>
+    <title>Troop Gear Manager</title>
     <style>
         :root {
             --twh-blue: #337ab7;
             --twh-header-bg: #fcf8e3;
             --twh-border: #ddd;
-            --danger-red: #d9534f;
+            --text-muted: #8a6d3b;
         }
 
-        body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; background: white; padding: 20px; }
+        body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
         
-        /* Tab Styling from your screenshot */
-        .tabs { display: flex; margin-bottom: -1px; }
+        /* Navigation & Tabs */
+        .nav-header { background: var(--twh-blue); color: white; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid var(--twh-border); }
         .tab { 
             padding: 10px 20px; border: 1px solid var(--twh-border); 
-            background: var(--twh-header-bg); border-radius: 4px 4px 0 0; cursor: pointer;
+            background: #eee; border-radius: 4px 4px 0 0; cursor: pointer;
         }
-        .tab.active { background: white; border-bottom: 1px solid white; font-weight: bold; }
+        .tab.active { background: white; border-bottom: 1px solid white; font-weight: bold; color: var(--twh-blue); }
 
-        /* Buttons from your screenshot */
-        .btn-row { background: #f9f9f9; border: 1px solid var(--twh-border); padding: 10px; margin-bottom: 20px; }
-        button { 
-            padding: 5px 12px; border-radius: 4px; border: 1px solid #2e6da4;
-            background: var(--twh-blue); color: white; cursor: pointer; font-size: 14px;
-        }
-        .btn-delete { background: var(--danger-red); border-color: #d43f3a; }
+        /* Forms (The "New Page" section) */
+        .page-section { display: none; background: #fff; padding: 20px; border: 1px solid var(--twh-border); border-radius: 4px; }
+        .page-section.active { display: block; }
+        
+        .form-group { margin-bottom: 15px; max-width: 400px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
 
-        /* The Main Table */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        th { background: var(--twh-header-bg); border: 1px solid var(--twh-border); color: #8a6d3b; padding: 8px; text-align: left; }
-        td { border: 1px solid var(--twh-border); padding: 8px; vertical-align: middle; }
+        /* Table Design */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: var(--twh-header-bg); border: 1px solid var(--twh-border); color: var(--text-muted); padding: 10px; text-align: left; }
+        td { border: 1px solid var(--twh-border); padding: 10px; }
         tr:nth-child(even) { background-color: #f9f9f9; }
 
-        /* Status Colors */
-        .status-in { color: green; font-weight: bold; }
-        .status-out { color: var(--danger-red); font-weight: bold; }
+        /* Action Buttons */
+        .btn { padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; color: white; font-weight: bold; }
+        .btn-update { background: #5bc0de; }
+        .btn-info { background: #f0ad4e; }
+        .btn-delete { background: #d9534f; }
+        .btn-save { background: #5cb85c; margin-top: 10px; }
 
-        /* Modal (More Info Popup) */
-        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
-        .modal-content { background: white; margin: 10% auto; padding: 20px; width: 50%; border-radius: 8px; }
-        .close { float: right; cursor: pointer; font-size: 24px; }
+        .status-in { color: #5cb85c; font-weight: bold; }
+        .status-out { color: #d9534f; font-weight: bold; }
     </style>
 </head>
 <body>
 
+    <div class="nav-header">
+        <h2 style="margin:0">🌲 Troop Gear Library & Inventory</h2>
+    </div>
+
     <div class="tabs">
-        <div class="tab active">Inventory List</div>
-        <div class="tab">Maintenance Log</div>
+        <div class="tab active" onclick="showPage('inventory')">View Inventory</div>
+        <div class="tab" onclick="showPage('add-item')">Add New Gear</div>
     </div>
 
-    <div class="btn-row">
-        <button onclick="addItem()">Add Gear Item</button>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Update</th>
-                <th>Status</th>
-                <th>Gear Item</th>
-                <th>Currently With</th>
-                <th>Current Event</th>
-                <th>More Info</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
-        <tbody id="gear-body">
-            </tbody>
-    </table>
-
-    <div id="infoModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle">Gear History</h2>
-            <div id="modalBody"></div>
+    <section id="inventory" class="page-section active">
+        <div style="margin-bottom: 15px;">
+            <strong>Filter by Category:</strong>
+            <select id="filterCategory" onchange="renderTable()" style="width: auto; display: inline-block;">
+                <option value="All">All Items</option>
+                <option value="Tents">Tents</option>
+                <option value="Cooking">Cooking</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Tools">Tools/Other</option>
+            </select>
         </div>
-    </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Update</th>
+                    <th>Status</th>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Currently With</th>
+                    <th>Event</th>
+                    <th>History</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="gear-body"></tbody>
+        </table>
+    </section>
+
+    <section id="add-item" class="page-section">
+        <h3>Register New Equipment</h3>
+        <div class="form-group">
+            <label>Gear Name</label>
+            <input type="text" id="newName" placeholder="e.g. Jetboil Stove #2">
+        </div>
+        <div class="form-group">
+            <label>Category</label>
+            <select id="newCategory">
+                <option value="Tents">Tents</option>
+                <option value="Cooking">Cooking</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Tools">Tools/Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Initial Condition / Notes</label>
+            <input type="text" id="newNotes" placeholder="New in box, purchased 2026">
+        </div>
+        <button class="btn btn-save" onclick="saveNewItem()">Save to Database</button>
+    </section>
 
     <script>
-        let gearList = [
-            { id: 1, name: "Patrol Cook Kit", status: "In", user: "-", event: "-", history: ["Purchased 2024"] },
-            { id: 2, name: "Eureka Tent #4", status: "Out", user: "Eagle Scout Joe", event: "Winter Camporee", history: ["Last used: Oct 2025 by Patrol A", "Zipper repaired Nov 2025"] }
-        ];
+        // DATABASE LOGIC: Load from localStorage or start empty
+        let gearList = JSON.parse(localStorage.getItem('troopGear')) || [];
 
-        function render() {
+        function showPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function saveNewItem() {
+            const name = document.getElementById('newName').value;
+            const cat = document.getElementById('newCategory').value;
+            const notes = document.getElementById('newNotes').value;
+
+            if(!name) return alert("Please enter a name.");
+
+            const item = {
+                id: Date.now(),
+                name: name,
+                cat: cat,
+                status: "In",
+                user: "-",
+                event: "-",
+                history: [`Item added: ${notes} (${new Date().toLocaleDateString()})`]
+            };
+
+            gearList.push(item);
+            updateDatabase();
+            showPage('inventory');
+            
+            // Reset form
+            document.getElementById('newName').value = "";
+            document.getElementById('newNotes').value = "";
+        }
+
+        function updateDatabase() {
+            localStorage.setItem('troopGear', JSON.stringify(gearList));
+            renderTable();
+        }
+
+        function renderTable() {
             const body = document.getElementById('gear-body');
+            const filter = document.getElementById('filterCategory').value;
             body.innerHTML = "";
-            gearList.forEach(item => {
+
+            gearList.filter(i => filter === "All" || i.cat === filter).forEach(item => {
                 const row = `
                     <tr>
-                        <td><button style="background:#5bc0de; border:none;" onclick="toggleIO(${item.id})">Update</button></td>
+                        <td><button class="btn btn-update" onclick="updateStatus(${item.id})">Update</button></td>
                         <td class="${item.status === 'In' ? 'status-in' : 'status-out'}">${item.status}</td>
                         <td><strong>${item.name}</strong></td>
+                        <td>${item.cat}</td>
                         <td>${item.user}</td>
                         <td>${item.event}</td>
-                        <td><button style="background:#f0ad4e; border:none;" onclick="showInfo(${item.id})">More Info</button></td>
-                        <td><button class="btn-delete" onclick="deleteItem(${item.id})">Delete</button></td>
+                        <td><button class="btn btn-info" onclick="alert('${item.history.join('\\n')}')">History</button></td>
+                        <td><button class="btn btn-delete" onclick="deleteItem(${item.id})">X</button></td>
                     </tr>
                 `;
                 body.innerHTML += row;
             });
         }
 
-        function toggleIO(id) {
+        function updateStatus(id) {
             const item = gearList.find(g => g.id === id);
             if (item.status === "In") {
-                const who = prompt("Who is taking it?");
-                const where = prompt("For which event?");
+                const who = prompt("Scout Name:");
+                const where = prompt("Event Name:");
                 if (who && where) {
-                    item.status = "Out";
-                    item.user = who;
-                    item.event = where;
-                    item.history.push(`Checked out by ${who} for ${where} on ${new Date().toLocaleDateString()}`);
+                    item.status = "Out"; item.user = who; item.event = where;
+                    item.history.push(`Out: ${who} for ${where} (${new Date().toLocaleDateString()})`);
                 }
             } else {
-                item.status = "In";
-                item.user = "-";
-                item.event = "-";
-                item.history.push(`Returned on ${new Date().toLocaleDateString()}`);
+                item.status = "In"; item.user = "-"; item.event = "-";
+                item.history.push(`In: Returned (${new Date().toLocaleDateString()})`);
             }
-            render();
-        }
-
-        function showInfo(id) {
-            const item = gearList.find(g => g.id === id);
-            document.getElementById('modalTitle').innerText = "History: " + item.name;
-            document.getElementById('modalBody').innerHTML = "<ul>" + item.history.map(h => `<li>${h}</li>`).join('') + "</ul>";
-            document.getElementById('infoModal').style.display = "block";
-        }
-
-        function closeModal() { document.getElementById('infoModal').style.display = "none"; }
-
-        function addItem() {
-            const n = prompt("Item Name:");
-            if(n) {
-                gearList.push({ id: Date.now(), name: n, status: "In", user: "-", event: "-", history: ["Added to catalog"] });
-                render();
-            }
+            updateDatabase();
         }
 
         function deleteItem(id) {
-            if(confirm("Delete this item?")) {
+            if(confirm("Permanently delete this gear?")) {
                 gearList = gearList.filter(g => g.id !== id);
-                render();
+                updateDatabase();
             }
         }
 
-        render();
+        // Initial Load
+        renderTable();
     </script>
 </body>
 </html>
