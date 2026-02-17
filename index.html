@@ -3,139 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Troop Gear Library</title>
+    <title>Troop Gear Library | SCCLD Style</title>
     <style>
-        /* CSS: The "Look" of the Library */
+        :root {
+            --primary-blue: #003366; /* Library Blue */
+            --success-green: #2ecc71;
+            --danger-red: #e74c3c;
+        }
+
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #f0f2f5; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: #f8f9fa; 
+            margin: 0;
             padding: 20px; 
-            color: #333;
         }
+
         header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
+            background: var(--primary-blue);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+
+        /* The "Add Item" Form Section */
+        #admin-section {
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { 
+            width: 95%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+        }
+
+        .btn-add { 
+            background: var(--primary-blue); 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Gear Grid */
         #gear-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
         }
+
         .card {
             background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border-top: 10px solid #2ecc71; /* Green for Available */
-            transition: transform 0.2s;
-        }
-        .card:hover { transform: translateY(-5px); }
-        .card.out { border-top-color: #e74c3c; } /* Red for Checked Out */
-
-        .card h3 { margin: 0 0 10px 0; font-size: 1.4em; }
-        .status-tag {
-            display: inline-block;
-            padding: 4px 8px;
+            border-left: 8px solid var(--success-green);
+            padding: 15px;
             border-radius: 4px;
-            font-size: 0.8em;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .status-available { background: #e8faf0; color: #2ecc71; }
-        .status-out { background: #fdedec; color: #e74c3c; }
 
-        .holder-info { font-style: italic; color: #666; margin-bottom: 15px; }
+        .card.out { border-left-color: var(--danger-red); }
 
-        button {
+        .card h3 { margin-top: 0; color: var(--primary-blue); }
+        .tag { font-size: 0.8em; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+
+        button.action-btn {
             width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
+            margin-top: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
             cursor: pointer;
-            transition: 0.2s;
+            font-weight: bold;
         }
-        .btn-checkout { background: #3498db; color: white; }
-        .btn-checkout:hover { background: #2980b9; }
-        .btn-return { background: #95a5a6; color: white; }
-        .btn-return:hover { background: #7f8c8d; }
+
+        button.action-btn:hover { background: #f0f0f0; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🌲 Troop Gear Library</h1>
-        <p>Keep track of troop equipment like a pro.</p>
+        <h1>🌲 Troop 123 Equipment Catalog</h1>
+        <p>Official Inventory Management System</p>
     </header>
+
+    <section id="admin-section">
+        <h3>+ Add New Gear to Library</h3>
+        <div class="form-group">
+            <label>Item Name</label>
+            <input type="text" id="itemName" placeholder="e.g. Coleman 2-Burner Stove">
+        </div>
+        <div class="form-group">
+            <label>Category</label>
+            <input type="text" id="itemCat" placeholder="e.g. Cooking, Tents, Lighting">
+        </div>
+        <button class="btn-add" onclick="addItem()">Add to Catalog</button>
+    </section>
 
     <main id="gear-container">
         </main>
 
     <script>
-        // JS: The "Logic" of the Library
-        
-        // This is your data (In a real app, this comes from a database)
+        // Data Array
         let gearList = [
-            { id: 1, name: "Patrol Cook Kit A", status: "Available", user: "" },
-            { id: 2, name: "MSR WhisperLite Stove", status: "Available", user: "" },
-            { id: 3, name: "Eureka 4-Man Tent", status: "Available", user: "" },
-            { id: 4, name: "Troop First Aid Kit", status: "Checked Out", user: "SPL Smith" },
-            { id: 5, name: "Dutch Oven (12-inch)", status: "Available", user: "" },
-            { id: 6, name: "Propane Lantern", status: "Available", user: "" }
+            { id: 1, name: "Patrol Box A", cat: "Cooking", status: "Available", user: "" },
+            { id: 2, name: "Backpacking Tent", cat: "Sleeping", status: "Available", user: "" }
         ];
 
         const container = document.getElementById('gear-container');
 
-        // Function to draw the library cards on the screen
+        // Draw the Library
         function renderLibrary() {
             container.innerHTML = ""; 
-            
             gearList.forEach(item => {
                 const isOut = item.status === "Checked Out";
                 const card = document.createElement('div');
                 card.className = `card ${isOut ? 'out' : ''}`;
                 
                 card.innerHTML = `
-                    <span class="status-tag ${isOut ? 'status-out' : 'status-available'}">
-                        ${item.status}
-                    </span>
+                    <span class="tag">${item.cat}</span>
                     <h3>${item.name}</h3>
-                    <p class="holder-info">
-                        ${isOut ? `Currently with: <strong>${item.user}</strong>` : "Available for checkout"}
-                    </p>
-                    <button class="${isOut ? 'btn-return' : 'btn-checkout'}" onclick="toggleGear(${item.id})">
-                        ${isOut ? 'Return to Library' : 'Check Out'}
+                    <p>Status: <strong>${item.status}</strong></p>
+                    <p>${isOut ? `With: ${item.user}` : "Ready for use"}</p>
+                    <button class="action-btn" onclick="toggleStatus(${item.id})">
+                        ${isOut ? 'Check In / Return' : 'Check Out'}
                     </button>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // Function to handle the clicking of buttons
-        function toggleGear(id) {
-            const item = gearList.find(g => g.id === id);
+        // Add Item Function
+        function addItem() {
+            const nameInput = document.getElementById('itemName');
+            const catInput = document.getElementById('itemCat');
+
+            if (nameInput.value === "") {
+                alert("Please enter an item name.");
+                return;
+            }
+
+            const newItem = {
+                id: Date.now(), // Unique ID based on time
+                name: nameInput.value,
+                cat: catInput.value || "General",
+                status: "Available",
+                user: ""
+            };
+
+            gearList.push(newItem);
             
+            // Clear inputs
+            nameInput.value = "";
+            catInput.value = "";
+            
+            renderLibrary();
+        }
+
+        // Check In/Out Logic
+        function toggleStatus(id) {
+            const item = gearList.find(g => g.id === id);
             if (item.status === "Available") {
-                const name = prompt(`Who is checking out the ${item.name}?`);
-                if (name && name.trim() !== "") {
+                const name = prompt("Scout Name for Checkout:");
+                if (name) {
                     item.status = "Checked Out";
                     item.user = name;
                 }
             } else {
-                const confirmReturn = confirm(`Are you sure you want to return ${item.name}?`);
-                if (confirmReturn) {
-                    item.status = "Available";
-                    item.user = "";
-                }
+                item.status = "Available";
+                item.user = "";
             }
-            
-            renderLibrary(); // Re-draw the screen with updated data
+            renderLibrary();
         }
 
-        // Start the app
         renderLibrary();
     </script>
 </body>
